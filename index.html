@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeggieTrack · Modern Inventory</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app">
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🥕</span>
+                    <span class="logo-text">Veggie<span>Track</span></span>
+                </div>
+                <button class="sidebar-close" id="closeSidebar">✕</button>
+            </div>
+
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <span>👨‍🌾</span>
+                </div>
+                <div class="user-details">
+                    <span class="user-name">Kiran's Shop</span>
+                    <span class="user-role">Vegetable Vendor</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-view="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                    <span class="nav-badge" id="dashboardBadge"></span>
+                </button>
+                <button class="nav-item" data-view="purchase">
+                    <span class="nav-icon">📦</span>
+                    <span class="nav-label">Purchase</span>
+                </button>
+                <button class="nav-item" data-view="sell">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-label">Sell</span>
+                </button>
+                <button class="nav-item" data-view="inventory">
+                    <span class="nav-icon">🥬</span>
+                    <span class="nav-label">Inventory</span>
+                </button>
+                <button class="nav-item" data-view="reports">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-label">Reports</span>
+                </button>
+                <button class="nav-item" data-view="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-label">Settings</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="themeToggle">
+                    <span class="theme-icon">🌙</span>
+                    <span class="theme-text">Dark Mode</span>
+                </button>
+                <div class="date-display">
+                    <span>📅</span>
+                    <span id="sidebarDate"></span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Header -->
+            <header class="header">
+                <button class="menu-btn" id="menuBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <div class="header-left">
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                </div>
+
+                <div class="header-right">
+                    <div class="search-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" id="globalSearch" placeholder="Search...">
+                    </div>
+                    
+                    <button class="action-btn" id="quickActionsBtn">
+                        <span>⚡</span>
+                    </button>
+                    
+                    <button class="action-btn" id="notificationsBtn">
+                        <span>🔔</span>
+                        <span class="notification-dot"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Quick Actions Panel -->
+            <div class="quick-panel" id="quickPanel">
+                <div class="quick-panel-header">
+                    <h3>Quick Actions</h3>
+                    <button class="close-panel" id="closePanel">✕</button>
+                </div>
+                <div class="quick-panel-grid">
+                    <button class="quick-action" onclick="shop.switchView('purchase')">
+                        <span class="quick-icon">📦+</span>
+                        <span>Add Stock</span>
+                    </button>
+                    <button class="quick-action" onclick="shop.switchView('sell')">
+                        <span class="quick-icon">💰+</span>
+                        <span>New Sale</span>
+                    </button>
+                    <button class="quick-action" onclick="shop.quickBackup()">
+                        <span class="quick-icon">💾</span>
+                        <span>Backup</span>
+                    </button>
+                    <button class="quick-action" onclick="shop.showLowStock()">
+                        <span class="quick-icon">⚠️</span>
+                        <span>Low Stock</span>
+                    </button>
+                    <button class="quick-action" onclick="shop.generateReport()">
+                        <span class="quick-icon">📊</span>
+                        <span>Reports</span>
+                    </button>
+                    <button class="quick-action" onclick="shop.refreshData()">
+                        <span class="quick-icon">↻</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Views Container -->
+            <div class="views">
+                <!-- DASHBOARD VIEW -->
+                <div id="dashboard" class="view active">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon revenue">
+                                <span>💰</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Today's Revenue</span>
+                                <span class="stat-value" id="todayRevenue">₹0</span>
+                                <span class="stat-trend" id="revenueTrend">+0% vs yesterday</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon profit">
+                                <span>📈</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Net Profit</span>
+                                <span class="stat-value profit-text" id="todayProfit">₹0</span>
+                                <span class="stat-trend" id="profitTrend">+0% margin</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon inventory">
+                                <span>📦</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Stock Value</span>
+                                <span class="stat-value" id="stockValue">₹0</span>
+                                <span class="stat-trend" id="stockItems">0 items</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon sales">
+                                <span>🛒</span>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-label">Items Sold</span>
+                                <span class="stat-value" id="itemsSold">0 kg</span>
+                                <span class="stat-trend" id="salesCount">0 transactions</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Payment Methods</h3>
+                                <span class="chart-info">Today's breakdown</span>
+                            </div>
+                            <div class="chart-body">
+                                <div class="distribution">
+                                    <div class="distribution-item">
+                                        <div class="dist-label">
+                                            <span class="dot cash"></span>
+                                            <span>Cash</span>
+                                        </div>
+                                        <div class="dist-bar-container">
+                                            <div class="dist-bar cash" id="cashBar" style="width: 0%"></div>
+                                        </div>
+                                        <span class="dist-value" id="cashAmount">₹0</span>
+                                    </div>
+                                    <div class="distribution-item">
+                                        <div class="dist-label">
+                                            <span class="dot upi"></span>
+                                            <span>UPI</span>
+                                        </div>
+                                        <div class="dist-bar-container">
+                                            <div class="dist-bar upi" id="upiBar" style="width: 0%"></div>
+                                        </div>
+                                        <span class="dist-value" id="upiAmount">₹0</span>
+                                    </div>
+                                    <div class="distribution-item">
+                                        <div class="dist-label">
+                                            <span class="dot card"></span>
+                                            <span>Card</span>
+                                        </div>
+                                        <div class="dist-bar-container">
+                                            <div class="dist-bar card" id="cardBar" style="width: 0%"></div>
+                                        </div>
+                                        <span class="dist-value" id="cardAmount">₹0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Low Stock Alert</h3>
+                                <span class="badge" id="lowStockCount">0</span>
+                            </div>
+                            <div class="chart-body" id="lowStockList">
+                                <div class="empty-state">✨ All stock levels healthy</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Grid -->
+                    <div class="activity-grid">
+                        <div class="activity-card">
+                            <div class="activity-header">
+                                <h3>Recent Sales</h3>
+                                <button class="icon-btn" onclick="shop.refreshSales()">↻</button>
+                            </div>
+                            <div class="activity-body" id="recentSalesList">
+                                <div class="empty-state">No sales today</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-card">
+                            <div class="activity-header">
+                                <h3>Top Selling</h3>
+                                <span class="badge">Today</span>
+                            </div>
+                            <div class="activity-body" id="topSellingList">
+                                <div class="empty-state">No data available</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-card">
+                            <div class="activity-header">
+                                <h3>Recent Purchases</h3>
+                                <button class="icon-btn" onclick="shop.refreshPurchases()">↻</button>
+                            </div>
+                            <div class="activity-body" id="recentPurchasesList">
+                                <div class="empty-state">No purchases today</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PURCHASE VIEW -->
+                <div id="purchase" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Purchase Stock</h2>
+                            <p>Record new vegetable arrivals</p>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <!-- Purchase Form -->
+                        <div class="form-card">
+                            <h3>Add New Stock</h3>
+                            
+                            <div class="form-group">
+                                <label>Vegetable</label>
+                                <select id="purchaseVeg" class="form-select">
+                                    <option value="">Select vegetable</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Quantity (kg)</label>
+                                    <input type="number" id="purchaseQty" class="form-input" step="0.1" min="0.1" placeholder="0.0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Price (₹)</label>
+                                    <input type="number" id="purchasePrice" class="form-input" min="1" placeholder="0">
+                                </div>
+                            </div>
+
+                            <div class="price-calculator">
+                                <span>Price per kg</span>
+                                <span class="calculated-price" id="pricePerKg">₹0.00</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Purchase Date</label>
+                                <input type="date" id="purchaseDate" class="form-input">
+                            </div>
+
+                            <button class="btn-primary" id="addPurchaseBtn">
+                                <span>+</span> Add Purchase
+                            </button>
+                        </div>
+
+                        <!-- Recent Purchases -->
+                        <div class="list-card">
+                            <h3>Recent Purchases</h3>
+                            <div class="list-container" id="recentPurchases">
+                                <div class="empty-state">No purchases yet</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SELL VIEW -->
+                <div id="sell" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Record Sale</h2>
+                            <p>Add customer purchases</p>
+                        </div>
+                    </div>
+
+                    <div class="grid-2 reverse">
+                        <!-- Quick Sell Grid -->
+                        <div class="veg-grid-card">
+                            <div class="grid-header">
+                                <h3>Quick Sell</h3>
+                                <input type="text" class="grid-search" id="vegSearch" placeholder="Filter vegetables...">
+                            </div>
+                            <div class="veg-grid" id="vegQuickGrid"></div>
+                        </div>
+
+                        <!-- Sale Form -->
+                        <div class="form-card">
+                            <h3>Sale Details</h3>
+                            
+                            <div class="form-group">
+                                <label>Vegetable</label>
+                                <select id="sellVeg" class="form-select">
+                                    <option value="">Select vegetable</option>
+                                </select>
+                            </div>
+
+                            <div class="stock-info" id="stockInfo">
+                                <span>📊 Select a vegetable</span>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Quantity (kg)</label>
+                                    <input type="number" id="sellQty" class="form-input" step="0.1" min="0.1" placeholder="0.0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Price (₹/kg)</label>
+                                    <input type="number" id="sellPrice" class="form-input" step="1" min="1" placeholder="0">
+                                </div>
+                            </div>
+
+                            <div class="total-calculator">
+                                <span>Total Amount</span>
+                                <span class="total-amount" id="saleTotal">₹0</span>
+                            </div>
+
+                            <div class="payment-methods">
+                                <label class="payment-method">
+                                    <input type="radio" name="payment" value="cash" checked>
+                                    <span class="payment-label">💵 Cash</span>
+                                </label>
+                                <label class="payment-method">
+                                    <input type="radio" name="payment" value="upi">
+                                    <span class="payment-label">📱 UPI</span>
+                                </label>
+                                <label class="payment-method">
+                                    <input type="radio" name="payment" value="card">
+                                    <span class="payment-label">💳 Card</span>
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Sale Date</label>
+                                <input type="date" id="sellDate" class="form-input">
+                            </div>
+
+                            <button class="btn-primary" id="addSaleBtn">
+                                <span>✓</span> Record Sale
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INVENTORY VIEW -->
+                <div id="inventory" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Inventory</h2>
+                            <p>Current stock levels</p>
+                        </div>
+                        <button class="btn-secondary" onclick="shop.exportInventory()">
+                            📥 Export
+                        </button>
+                    </div>
+
+                    <div class="inventory-grid" id="inventoryGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- REPORTS VIEW -->
+                <div id="reports" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Reports</h2>
+                            <p>Analytics & insights</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn-secondary" onclick="shop.exportReport()">📥 Export</button>
+                            <button class="btn-secondary" onclick="shop.printReport()">🖨️ Print</button>
+                        </div>
+                    </div>
+
+                    <!-- Date Filter -->
+                    <div class="filter-card">
+                        <div class="filter-group">
+                            <input type="date" id="reportStart" class="filter-input">
+                            <span>→</span>
+                            <input type="date" id="reportEnd" class="filter-input">
+                            <button class="btn-primary" onclick="shop.generateReport()">Apply</button>
+                        </div>
+                    </div>
+
+                    <!-- Report Stats -->
+                    <div class="report-stats">
+                        <div class="report-stat">
+                            <span class="stat-label">Total Purchases</span>
+                            <span class="stat-value" id="reportPurchaseTotal">₹0</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="stat-label">Total Sales</span>
+                            <span class="stat-value" id="reportSalesTotal">₹0</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="stat-label">Net Profit</span>
+                            <span class="stat-value profit-text" id="reportProfit">₹0</span>
+                        </div>
+                        <div class="report-stat">
+                            <span class="stat-label">Profit Margin</span>
+                            <span class="stat-value" id="reportMargin">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Report Table -->
+                    <div class="table-card">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Vegetable</th>
+                                    <th>Purchased</th>
+                                    <th>Cost</th>
+                                    <th>Sold</th>
+                                    <th>Revenue</th>
+                                    <th>Profit</th>
+                                    <th>Margin</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportBody">
+                                <tr>
+                                    <td colspan="7" class="empty-state">Select date range</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SETTINGS VIEW -->
+                <div id="settings" class="view">
+                    <div class="view-header">
+                        <div>
+                            <h2>Settings</h2>
+                            <p>Manage your preferences</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        <!-- Vegetables -->
+                        <div class="settings-card">
+                            <h3>🥬 Vegetables</h3>
+                            <div class="settings-body">
+                                <div class="add-item">
+                                    <input type="text" id="newVegName" class="form-input" placeholder="New vegetable name">
+                                    <button class="btn-primary" onclick="shop.addVegetable()">Add</button>
+                                </div>
+                                <div class="items-list" id="vegList"></div>
+                            </div>
+                        </div>
+
+                        <!-- Data -->
+                        <div class="settings-card">
+                            <h3>💾 Data</h3>
+                            <div class="settings-body">
+                                <div class="setting-item">
+                                    <span>Backup Data</span>
+                                    <button class="btn-secondary" onclick="shop.exportData()">Export</button>
+                                </div>
+                                <div class="setting-item">
+                                    <span>Restore Data</span>
+                                    <input type="file" id="importFile" accept=".json" hidden>
+                                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()">Import</button>
+                                </div>
+                                <div class="setting-item">
+                                    <span>Last Backup</span>
+                                    <span id="lastBackup">Never</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Appearance -->
+                        <div class="settings-card">
+                            <h3>🎨 Appearance</h3>
+                            <div class="settings-body">
+                                <div class="setting-item">
+                                    <span>Theme</span>
+                                    <select id="themeSelect" class="form-select">
+                                        <option value="light">Light</option>
+                                        <option value="dark">Dark</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="settings-card danger">
+                            <h3>⚠️ Danger Zone</h3>
+                            <div class="settings-body">
+                                <div class="setting-item">
+                                    <span>Clear Today's Data</span>
+                                    <button class="btn-danger" onclick="shop.confirmClearToday()">Clear</button>
+                                </div>
+                                <div class="setting-item">
+                                    <span>Reset All Data</span>
+                                    <button class="btn-danger" onclick="shop.confirmReset()">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirm Action</h3>
+            <p id="modalMessage">Are you sure?</p>
+            <div class="modal-actions">
+                <button class="btn-danger" id="confirmBtn">Confirm</button>
+                <button class="btn-secondary" id="cancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
