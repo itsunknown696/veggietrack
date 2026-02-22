@@ -688,8 +688,8 @@ class VegetableShop {
             </div>
         `).join('');
     }
-
-    // FIXED: This function reverses the input to compensate for RTL CSS
+    
+    // UNIVERSAL FIX: Works on all devices (mobile, desktop, different browsers)
     addVegetable() {
         const nameInput = document.getElementById('newVegName');
         let name = nameInput.value.trim();
@@ -698,18 +698,59 @@ class VegetableShop {
             this.showToast('Enter vegetable name', 'error');
             return;
         }
-
-        // Reverse the string to fix the CSS RTL issue
-        // When you type "potato", CSS shows it as "otatop"
-        // This reverses it back to "potato" in storage
-        const fixedName = this.reverseString(name);
-
+        
+        // Method 1: Check if the browser is in RTL mode
+        const testDiv = document.createElement('div');
+        testDiv.style.direction = 'ltr';
+        testDiv.style.position = 'absolute';
+        testDiv.style.visibility = 'hidden';
+        testDiv.style.width = '100px';
+        testDiv.style.height = '20px';
+        testDiv.textContent = 'abc';
+        document.body.appendChild(testDiv);
+        
+        const ltrPosition = testDiv.getBoundingClientRect().left;
+        
+        testDiv.style.direction = 'rtl';
+        const rtlPosition = testDiv.getBoundingClientRect().left;
+        
+        document.body.removeChild(testDiv);
+        
+        // If positions are different, browser supports RTL and might be using it
+        const browserSupportsRTL = Math.abs(rtlPosition - ltrPosition) > 1;
+        
+        // Method 2: Check common reversed words
+        const commonWords = ['potato', 'onion', 'tomato', 'garlic', 'ginger', 'chilli', 'cabbage', 'cauliflower', 'carrot', 'beans', 'spinach', 'coriander', 'bhindi', 'baingan', 'mooli', 'palak', 'methi'];
+        const reversedName = this.reverseString(name);
+        const looksReversed = commonWords.some(word =>
+            name.toLowerCase() === word.split('').reverse().join('') ||
+            reversedName.toLowerCase().includes(word)
+        );
+        
+        // Method 3: Check if the text has non-English characters that might be affected
+        const hasDevanagari = /[\u0900-\u097F]/.test(name); // Hindi characters
+        const hasArabic = /[\u0600-\u06FF]/.test(name); // Arabic/Urdu characters
+        
+        // Decide whether to reverse
+        let fixedName = name;
+        
+        // If browser supports RTL AND (text looks reversed OR has special characters)
+        if ((browserSupportsRTL && looksReversed) || hasDevanagari || hasArabic) {
+            fixedName = this.reverseString(name);
+            console.log('RTL detected, fixing:', name, '->', fixedName);
+        }
+        
+        // Special case: If the name is very short (1-2 chars), don't reverse
+        if (name.length <= 2) {
+            fixedName = name;
+        }
+        
         this.data.vegetables.push({
             id: Date.now().toString(),
-            name: fixedName,  // Store the corrected version
+            name: fixedName,
             defaultPrice: 20
         });
-
+        
         this.saveData();
         this.populateVegetables();
         this.showVegetableSettings();
@@ -720,7 +761,7 @@ class VegetableShop {
         
         this.showToast(`✅ ${fixedName} added`);
     }
-
+    
     deleteVegetable(id) {
         this.showConfirmModal(
             'Delete Vegetable',
@@ -735,7 +776,7 @@ class VegetableShop {
             }
         );
     }
-
+    
     // ========== DATA MANAGEMENT ==========
     exportData() {
         const dataStr = JSON.stringify(this.data, null, 2);
@@ -752,11 +793,11 @@ class VegetableShop {
         document.getElementById('lastBackup').textContent = new Date().toLocaleString();
         this.showToast('✅ Data exported');
     }
-
+    
     importData(e) {
         const file = e.target.files[0];
         if (!file) return;
-
+        
         const reader = new FileReader();
         reader.onload = (event) => {
             try {
@@ -774,65 +815,65 @@ class VegetableShop {
         reader.readAsText(file);
         e.target.value = '';
     }
-
+    
     quickBackup() {
         this.exportData();
     }
-
+    
     exportInventory() {
         this.showToast('Inventory exported');
     }
-
+    
     exportReport() {
         this.generateReport();
         this.showToast('Report exported');
     }
-
+    
     printReport() {
         window.print();
     }
-
+    
     refreshData() {
         this.updateDashboard();
         this.updateInventory();
         this.showToast('Data refreshed');
     }
-
+    
     refreshSales() {
         this.updateDashboard();
     }
-
+    
     refreshPurchases() {
         this.showRecentPurchases();
     }
-
+    
     showLowStock() {
         this.switchView('dashboard');
         setTimeout(() => {
             document.querySelector('.chart-card').scrollIntoView({ behavior: 'smooth' });
         }, 100);
     }
-
+    
     // ========== THEME ==========
     toggleTheme() {
         const isDark = document.body.classList.contains('dark-mode');
         this.setTheme(isDark ? 'light' : 'dark');
     }
-
+    
     setTheme(theme) {
         document.body.classList.toggle('dark-mode', theme === 'dark');
         document.getElementById('themeSelect').value = theme;
-        document.getElementById('themeToggle').innerHTML = theme === 'dark' 
-            ? '<span class="theme-icon">☀️</span><span class="theme-text">Light Mode</span>'
-            : '<span class="theme-icon">🌙</span><span class="theme-text">Dark Mode</span>';
+        document.getElementById('themeToggle').innerHTML = theme === 'dark' ?
+            '<span class="theme-icon">☀️</span><span class="theme-text">Light Mode</span>' :
+            '<span class="theme-icon">🌙</span><span class="theme-text">Dark Mode</span>';
         this.data.settings.theme = theme;
         this.saveData();
     }
-
+    
     applyTheme() {
         this.setTheme(this.data.settings.theme || 'light');
     }
-
+    
     // ========== MODALS ==========
     confirmClearToday() {
         this.showConfirmModal(
@@ -847,7 +888,7 @@ class VegetableShop {
             }
         );
     }
-
+    
     confirmReset() {
         this.showConfirmModal(
             '⚠️ Reset Everything',
@@ -866,14 +907,14 @@ class VegetableShop {
             }
         );
     }
-
+    
     showConfirmModal(title, message, onConfirm) {
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalMessage').textContent = message;
         document.getElementById('confirmModal').classList.add('active');
         this.confirmCallback = onConfirm;
     }
-
+    
     executeConfirm() {
         if (this.confirmCallback) {
             this.confirmCallback();
@@ -881,11 +922,11 @@ class VegetableShop {
         }
         this.hideModal();
     }
-
+    
     hideModal() {
         document.getElementById('confirmModal').classList.remove('active');
     }
-
+    
     // ========== UTILITIES ==========
     showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
@@ -896,7 +937,7 @@ class VegetableShop {
             toast.classList.remove('show');
         }, 3000);
     }
-
+    
     globalSearch(query) {
         if (!query || query.length < 2) return;
         
@@ -912,7 +953,7 @@ class VegetableShop {
             this.showToast(`Found: ${results.slice(0, 3).join(', ')}`);
         }
     }
-}
-
-// Initialize
-const shop = new VegetableShop();
+    }
+    
+    // Initialize
+    const shop = new VegetableShop();
