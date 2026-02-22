@@ -915,4 +915,4 @@ class VegetableShop {
 }
 
 // Initialize
-const shop = new VegetableShop();const shop = new VegetableShop();
+const shop = new VegetableShop();
