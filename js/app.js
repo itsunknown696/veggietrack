@@ -13,6 +13,11 @@ class VegetableShop {
         this.init();
     }
 
+    // Helper function to reverse strings (fix for RTL CSS issue)
+    reverseString(str) {
+        return str.split('').reverse().join('');
+    }
+
     async init() {
         await this.loadData();
         this.setupEventListeners();
@@ -30,29 +35,26 @@ class VegetableShop {
             if (saved) {
                 this.data = JSON.parse(saved);
             } else {
-                this.seedDefaultData();
+                // No default vegetables - start with empty array
+                this.data.vegetables = [];
+                this.data.purchases = [];
+                this.data.sales = [];
+                this.data.settings = {
+                    theme: 'light',
+                    lastBackup: null
+                };
+                this.saveData();
             }
         } catch (error) {
-            this.seedDefaultData();
+            this.data.vegetables = [];
+            this.data.purchases = [];
+            this.data.sales = [];
+            this.data.settings = {
+                theme: 'light',
+                lastBackup: null
+            };
+            this.saveData();
         }
-    }
-
-    seedDefaultData() {
-        this.data.vegetables = [
-            { id: '1', name: 'Potato', defaultPrice: 20 },
-            { id: '2', name: 'Onion', defaultPrice: 25 },
-            { id: '3', name: 'Tomato', defaultPrice: 30 },
-            { id: '4', name: 'Garlic', defaultPrice: 120 },
-            { id: '5', name: 'Ginger', defaultPrice: 80 },
-            { id: '6', name: 'Chilli', defaultPrice: 40 },
-            { id: '7', name: 'Cabbage', defaultPrice: 25 },
-            { id: '8', name: 'Cauliflower', defaultPrice: 35 },
-            { id: '9', name: 'Carrot', defaultPrice: 40 },
-            { id: '10', name: 'Beans', defaultPrice: 60 },
-            { id: '11', name: 'Spinach', defaultPrice: 20 },
-            { id: '12', name: 'Coriander', defaultPrice: 15 }
-        ];
-        this.saveData();
     }
 
     saveData() {
@@ -285,8 +287,7 @@ class VegetableShop {
             .sort((a, b) => new Date(b.date) - new Date(a.date));
         
         if (purchases.length === 0) {
-            const veg = this.data.vegetables.find(v => v.id === vegId);
-            return veg?.defaultPrice || 20;
+            return 20; // Default price
         }
         
         return purchases[0].pricePerKg;
@@ -331,7 +332,7 @@ class VegetableShop {
         const veg = this.data.vegetables.find(v => v.id === vegId);
 
         document.getElementById('stockInfo').innerHTML = `
-            <strong>${veg?.name}</strong><br>
+            <strong>${veg?.name || 'Unknown'}</strong><br>
             Available: <strong>${stock}kg</strong><br>
             Avg cost: ₹${avgPrice.toFixed(2)}/kg
         `;
@@ -675,6 +676,11 @@ class VegetableShop {
     // ========== SETTINGS ==========
     showVegetableSettings() {
         const container = document.getElementById('vegList');
+        if (this.data.vegetables.length === 0) {
+            container.innerHTML = '<div class="empty-state">No vegetables added yet</div>';
+            return;
+        }
+        
         container.innerHTML = this.data.vegetables.map(v => `
             <div class="setting-item">
                 <span>${v.name}</span>
@@ -683,16 +689,24 @@ class VegetableShop {
         `).join('');
     }
 
+    // FIXED: This function reverses the input to compensate for RTL CSS
     addVegetable() {
-        const name = document.getElementById('newVegName').value.trim();
+        const nameInput = document.getElementById('newVegName');
+        let name = nameInput.value.trim();
+        
         if (!name) {
             this.showToast('Enter vegetable name', 'error');
             return;
         }
 
+        // Reverse the string to fix the CSS RTL issue
+        // When you type "potato", CSS shows it as "otatop"
+        // This reverses it back to "potato" in storage
+        const fixedName = this.reverseString(name);
+
         this.data.vegetables.push({
             id: Date.now().toString(),
-            name,
+            name: fixedName,  // Store the corrected version
             defaultPrice: 20
         });
 
@@ -700,8 +714,11 @@ class VegetableShop {
         this.populateVegetables();
         this.showVegetableSettings();
         this.populateVegGrid();
-        document.getElementById('newVegName').value = '';
-        this.showToast(`✅ ${name} added`);
+        
+        // Clear input
+        nameInput.value = '';
+        
+        this.showToast(`✅ ${fixedName} added`);
     }
 
     deleteVegetable(id) {
@@ -838,11 +855,13 @@ class VegetableShop {
             () => {
                 this.data.purchases = [];
                 this.data.sales = [];
-                this.seedDefaultData();
+                this.data.vegetables = [];
                 this.saveData();
                 this.populateVegetables();
                 this.updateDashboard();
                 this.updateInventory();
+                this.showVegetableSettings();
+                this.populateVegGrid();
                 this.showToast('System reset complete');
             }
         );
@@ -896,4 +915,4 @@ class VegetableShop {
 }
 
 // Initialize
-const shop = new VegetableShop();
+const shop = new VegetableShop();const shop = new VegetableShop();
